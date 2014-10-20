@@ -56,17 +56,17 @@ class ReadResponse extends FactualResponse
             $this->assignData($rootJSON['response']['data']);
         }
         // assign warning context
-        if (isset($rootJSON['response']['error_type'])) {
-            $this->errorType = $rootJSON['response']['error_type'];
+        if (isset($rootJSON['error_type'])) {
+            $this->errorType = $rootJSON['error_type'];
         }
-        if (isset($rootJSON['response']['message'])) {
-            $this->message = $rootJSON['response']['message'];
+        if (isset($rootJSON['message'])) {
+            $this->message = $rootJSON['message'];
         }
-        if (isset($rootJSON['response']['deprecated_id'])) {
-            $this->deprecatedId = $rootJSON['response']['deprecated_id'];
+        if (isset($rootJSON['deprecated_id'])) {
+            $this->deprecatedId = $rootJSON['deprecated_id'];
         }
-        if (isset($rootJSON['response']['current_id'])) {
-            $this->currentId = $rootJSON['response']['current_id'];
+        if (isset($rootJSON['current_id'])) {
+            $this->currentId = $rootJSON['current_id'];
         }
         return $rootJSON;
     }
