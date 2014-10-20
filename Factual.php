@@ -204,11 +204,7 @@ class Factual {
    * @return WarningResponse|ReadResponse the response of running <tt>query</tt> against Factual.
    */
   public function fetchRow($tableName, $factualID) {
-      $result = $this->request($this->urlForFetchRow($tableName, $factualID));
-      if (isset($result['status']) && $result['status']=='warning') {
-          return new WarningResponse($result);
-      }
-      return new ReadResponse($result);
+      return new ReadResponse($this->request($this->urlForFetchRow($tableName, $factualID)));
   }	
 
 	/**
