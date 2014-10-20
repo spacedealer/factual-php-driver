@@ -10,7 +10,7 @@ class ReadResponse extends FactualResponse {
 	
   protected $totalRowCount = null; //int
   protected $includedRows = null; //int
-  
+
 	/**
 	 * Parses JSON as array and assigns object values
 	 * @param string json JSON returned from API
@@ -25,10 +25,11 @@ class ReadResponse extends FactualResponse {
     	if(isset($rootJSON['response']['included_rows'])){
     		$this->includedRows = $rootJSON['response']['included_rows'];
     	}	
-    	//assign data
-    	$this->assignData($rootJSON['response']['data']);
-    	
-    	return $rootJSON;	
+    	// assign data
+        if (isset($rootJSON['response']['data'])) {
+            $this->assignData($rootJSON['response']['data']);
+        }
+    	return $rootJSON;
 	}
 
 	/**
