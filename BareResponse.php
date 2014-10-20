@@ -23,7 +23,7 @@ class BareResponse {
     	$this->parseResponse($apiResponse);
     } catch (Exception $e) {
     	//add note about json encoding borking here
-      throw $e ();
+      throw $e;
     }
   }
 
