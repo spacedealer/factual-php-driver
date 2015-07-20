@@ -475,6 +475,7 @@ class Factual {
 		//other curl options
 		$curlOptions[CURLOPT_CONNECTTIMEOUT] = $this->connectTimeout; //connection timeout
 		$curlOptions[CURLOPT_TIMEOUT] = $this->curlTimeout; //execution timeout
+		//$curlOptions[CURLOPT_FOLLOWLOCATION] = true; //follow 301 redirects
 		// Build request with OAuth request params
 		$request = new OAuthRequester($urlStr, $requestMethod, $params);
 		//check & flag debug
@@ -544,7 +545,7 @@ class Factual {
 		}
 		//check for deprecation, add to stdout
 		if ($result['code'] == 301){
-			file_put_contents('php://stderr', "Entity is deprecated");
+			//file_put_contents('php://stderr', "Entity is deprecated");
 		}
 		return $result;
 	}

@@ -11,6 +11,7 @@ class SubmitResponse extends FactualResponse {
 	protected $newEntity = false;
 	protected $factualID = null;
 	protected $commitID = null;
+	protected $isDelayed = false;
 
 	/**
 	 * Parses JSON as array and assigns object values
@@ -19,10 +20,18 @@ class SubmitResponse extends FactualResponse {
 	 */
 	protected function parseJSON($json){
 		$rootJSON = parent::parseJSON($json);
-		$this->commitID = $rootJSON['response']['commit_id'];
-		if (isset($this->newEntity)){$this->newEntity = (bool)$rootJSON['response']['new_entity'];}
-		if (isset($rootJSON['response']['factual_id'])){
-			$this->factualID = $rootJSON['response']['factual_id'];
+		//in some instances writes to the system will be delayed, and we cannot provide a committ ID
+		if ( array_key_exists( 'error_type', $rootJSON ) && $rootJSON['error_type'] == "DelayedResponse"){
+			//throw new Exception($rootJSON['message']);
+			$this->isDelayed = true;
+		} else {
+			$this->commitID = $rootJSON['response']['commit_id'];
+			if (isset($this->newEntity)){
+				$this->newEntity = (bool)$rootJSON['response']['new_entity'];
+			}
+			if (isset($rootJSON['response']['factual_id'])){
+				$this->factualID = $rootJSON['response']['factual_id'];
+			}
 		}
 		return $rootJSON;
 	}
@@ -35,6 +44,14 @@ class SubmitResponse extends FactualResponse {
 		return $this->newEntity;
 	}	
 	
+	/**
+	 * Is the write delayed?
+	 * @return bool
+	 */
+	public function isDelayed(){
+		return $this->isDelayed;
+	}	
+		
 	/**
 	 * Get the Factual ID (extant entity only)
 	 * @return string | null on no ID

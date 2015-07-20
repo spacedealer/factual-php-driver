@@ -81,7 +81,8 @@ abstract class FactualResponse extends ArrayIterator {
 	}
 
 	/**
-	 * Test for success (n 200 status return)
+	 * Test for success (200 status return)
+	 * Note this tests for a successful http call, not a successful program operation
 	 */
 	 public function success(){
 	 	if ($this->status = 200){

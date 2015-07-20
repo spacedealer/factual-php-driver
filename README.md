@@ -20,7 +20,7 @@ All classes are autoloaded.  Just <tt>require_once("Factual.php")</tt> and you'r
 The PHP <tt>__autoload()</tt> method is deprecated; this library uses <tt>spl_autoload_register()</tt>.  The Factual Autoload will not mess with other libraries or frameworks.
 
 #Getting Started
-## Get an API Key
+## Get an Oauth Key & Secret
 Obtain an oauth key and secret from Factual at https://www.factual.com/api-keys/request.  Do not expose your _secret_ to third-parties or  distribute it in PHP code (reminder: that's why it is called 'secret').
 
 ## Test Your Integration and Environment
@@ -40,7 +40,7 @@ Require the file 'Factual.php, and instantiate a <tt>factual</tt> object with th
     //setup
     require_once('Factual.php');
     $factual = new Factual("yourOauthKey","yourOauthSecret");
-	
+```
 The driver creates an authenticated handle to Factual and configures class loading on instantiation, so be sure to always instantiate a Factual object first.
     
 ## Simple Query Example
@@ -52,7 +52,7 @@ The driver creates an authenticated handle to Factual and configures class loadi
     $query->limit(3);
     $res = $factual->fetch("places", $query);
 	print_r($res->getData());
-	
+```	
 ## Full Text Search Example
 ```php
     // Find entities that match a full text search for Sushi in Santa Monica:
@@ -60,7 +60,7 @@ The driver creates an authenticated handle to Factual and configures class loadi
 	$query->search("Sushi Santa Monica");
     $res = $factual->fetch("places", $query);
 	print_r($res->getData());
-
+```
 See <a href="https://github.com/Factual/factual-php-driver/wiki/Working-with-Query-Results">Working with Query Results</a> for details on iterating through the results of your query, and obtaining query metadata.
 
 Unnecessary Reminder: we use <tt>print_r()</tt> in these examples so you can review the output visually.  Obviously, but worth a reminder nonetheless, you do not want to use <tt>print_r()</tt> in production.  
@@ -516,7 +516,7 @@ You can use limit and offset to support basic results paging. For example:
 ```
 NOTE: the driver is designed to access Factual's API at runtime.   We enforce a deep paging limit of 500 rows for any unique combination of filters: http://developer.factual.com/data-docs/
 
-This is the polite way of saying we'd rather you did not use our API to scrape Factual data for permanent retention.  We dod provide downloads of the entire dataset: contact sales@factual.com
+This is the polite way of saying we'd rather you did not use our API to scrape Factual data for permanent retention.  We do provide downloads of the entire dataset: contact partnership@factual.com
 
 ##Total Row Count
 Factual does not return the total number of records matching your filter by default -- there is a modest overhead in calculating this. We do however provide you the option of retrieving it explicitly.
@@ -634,6 +634,8 @@ Facets API Documentation: http://developer.factual.com/api-docs/#Facets
 #Write
 The Submit endpoint allows you to add a record to Factual, or to update an existing record.  To delete a record, see the flag() method, below.  
 
+Unverified accounts are restricted from making submit API calls.  Log in to Factual, and verify your account at  http://www.factual.com/keys/verify.
+
 ## Syntax
 Strictly speaking, we do an 'UPSERT' when you contribute data: we determine if the entity already exists, and update it appropriately; if not we create a new entity.  This avoids dupes and allows you to contribute data even if you do not know the Factual ID.  However, if you do, please include it to remove any ambiguity using the <tt>FactualSubmittor::setFactualID()</tt> method.  The only difference between updating an extant record and adding a new one is this inclusion of the Factual ID:
 ```php
@@ -642,14 +644,14 @@ Strictly speaking, we do an 'UPSERT' when you contribute data: we determine if t
 You can determine whether the entity you submitted is new:
 ```php
 	//is the submission a new entity?
-	$factualID = $res->isNew();
+	$isNew = $res->isNew();
 ```
 However, It's always a good idea to obtain the Factual ID from a Submit Result, and store it against the submitted entity:
 ```php
 	//get Factual ID of submitted entity
 	$factualID = $res->getFactualID();
 ```
-We return a Factual ID with every Submit Result; it is good practice to make a note of this and store it, and verify it against the ID you submitted.  In a few cases (such as if the entity you submitted has been deprecated), we may return a Factual ID different from the one you submitted.  In very limited circumstances, submissions may not be matched to records in realtime, and thus no factual_id will be provided.
+We attempt to return a Factual ID with every Submit Result; it is good practice to make a note of this and store it, and verify it against the ID you submitted.  In a few cases (such as if the entity you submitted has been deprecated), we may return a Factual ID different from the one you submitted.  In very limited circumstances, submissions may not be matched to records in realtime, and thus no factual_id will be provided.
 
 ## Submit Parameters
 
@@ -735,6 +737,19 @@ By default Factual employs a separate call to clear a field of information.  Thi
 ```	
 will behave identically to sending a submit request with the name, address and a clear request for the address_extended, to update the address and remove the existing extended address.
 
+##Delayed Writes
+Sometimes, if rarely, the write is cached and not written directly.  In these instances, neither a commitID nor a Factual ID will be returned.
+
+As this is an expected, if unusual program flow, it is best to check submissions with the isDelayed() method:
+
+	//make request
+	$res = $factual->submit($submitterator);
+	if (!$res->isDelayed()){
+		//store Factual ID and Commit ID
+	} else {
+		//do omething else
+	}
+
 ##Submit Examples
 
 <b><ex>Add data to Factual's Places table:</ex></b><br>
@@ -760,7 +775,11 @@ will behave identically to sending a submit request with the name, address and a
 
 	//confirm status of submission
 	if ($res->success()){
-		echo "OK\n";
+		if ($res->isDelayed){
+			echo "OK, but delayed write\n";
+		} else {
+			echo "OK\n";
+		}
 	} else {
 		echo "Borked\n";
 	}
